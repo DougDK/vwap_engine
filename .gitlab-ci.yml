@@ -1,0 +1,79 @@
+variables:
+  IMAGE_NAME: "fschallenge"
+
+stages:
+  - test
+  - build
+  - deploy
+
+lint:
+  image: node:15.0.1-slim
+  stage: test
+  script:
+      - cd codebase/rdicidr-0.1.0
+      - npm install lint
+      - npm run lint
+  cache:
+    key: node_modules
+    paths:
+      - codebase/rdicidr-0.1.0/node_modules
+
+prettier:
+  image: node:15.0.1-slim
+  stage: test
+  script:
+      - cd codebase/rdicidr-0.1.0
+      - npm install prettier
+      - npm run prettier
+  cache:
+    key: node_modules
+    paths:
+      - codebase/rdicidr-0.1.0/node_modules
+
+test:
+  image: node:15.0.1-slim
+  stage: test
+  script:
+      - cd codebase/rdicidr-0.1.0
+      - npm install
+      - npm run test
+  cache:
+    key: node_modules
+    paths:
+      - codebase/rdicidr-0.1.0/node_modules
+
+build:
+  image: docker:latest
+  stage: build
+  services:
+    - docker:dind
+  before_script:
+    - apk add --no-cache curl jq python3 py3-pip
+    - pip install awscli
+    - aws --version
+    - docker info
+    - docker --version
+  script:
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - docker build -t $IMAGE_NAME .
+      - docker tag $IMAGE_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_NAME:latest
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_NAME:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+deploy:
+  image: alpine:3.17.3
+  stage: deploy
+  script:
+      - apk add openssh-client
+      - mkdir ~/.ssh
+      - touch ~/.ssh/known_hosts
+      - ssh-keyscan -t rsa $AWS_EC2_URL >> ~/.ssh/known_hosts
+      - chmod 400 $AWS_EC2_SSH
+      - ssh -i "$AWS_EC2_SSH" $AWS_EC2_USER@$AWS_EC2_URL
+        "aws ecr get-login-password --region $AWS_DEFAULT_REGION | sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com &&
+        sudo docker pull $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_NAME:latest &&
+        sudo docker rm --force $IMAGE_NAME &&
+        sudo docker run -d -p 80:80 --name $IMAGE_NAME $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_NAME:latest"
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"

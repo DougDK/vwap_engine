@@ -21,8 +21,8 @@ Follow the steps below in order to prepare your environment to run it and also f
 1. Install and configure [Pyenv](https://github.com/pyenv/pyenv)  
 1. Run the commands
 ```bash
-pyenv virtualenv 3.10.11 zerohash
-pyenv local zerohash
+pyenv virtualenv 3.10.11 vwapengine
+pyenv local vwapengine
 pip install -r requirements.txt
 python main.py
 ```

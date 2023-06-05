@@ -14,21 +14,25 @@ def test_vwap():
 
     vwap = Vwap(SLIDING_WINDOW)
 
+    # Add first point
     current_vwap = vwap.process(points[0])
     assert len(vwap.points["XXX-YYY"]) == 1
     assert vwap.points["XXX-YYY"][0] == points[0]
     assert current_vwap == 100
 
+    # Add second point
     current_vwap = vwap.process(points[1])
     assert len(vwap.points["XXX-YYY"]) == 2
     assert vwap.points["XXX-YYY"][1] == points[1]
     assert current_vwap == 130
 
+    # Add third point
     current_vwap = vwap.process(points[2])
     assert len(vwap.points["XXX-YYY"]) == 3
     assert vwap.points["XXX-YYY"][2] == points[2]
     assert current_vwap == 150
 
+    # Test if sliding_window is working for sliding window of maximum 3
     current_vwap = vwap.process(points[3])
     assert len(vwap.points["XXX-YYY"]) == 3
     assert vwap.points["XXX-YYY"][2] == points[3]

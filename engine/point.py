@@ -1,7 +1,7 @@
-"""POINT MODULE"""
+"""Point module with the Point class to deal with Trading Pairs"""
 
 class Point:  # pylint: disable=R0903
-    """POINT CLASS"""
+    """Point class is used to represent trading pair price and quantity at some point"""
     trading_pair: str
     price: float
     quantity: float

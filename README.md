@@ -43,9 +43,10 @@ Follow the steps below in order to Build and Run the container solution:
 1. Run the commands  
 ```bash
 docker build -t coinbasevwap .
-docker run \
-    --name=coinbasevwap \
+docker run -d \
+    --name=coinbasevwap -d \
     coinbasevwap python main.py
+docker logs coinbasevwap
 docker rm -f coinbasevwap
 ```
 
